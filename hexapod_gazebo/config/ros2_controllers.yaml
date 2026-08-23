@@ -1,0 +1,56 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    joint_group_effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
+    joint_group_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+joint_group_position_controller:
+  ros__parameters:
+    joints:
+      - fl_coxa_joint
+      - fl_femur_joint
+      - fl_tibia_joint
+      - ml_coxa_joint
+      - ml_femur_joint
+      - ml_tibia_joint
+      - rl_coxa_joint
+      - rl_femur_joint
+      - rl_tibia_joint
+      - fr_coxa_joint
+      - fr_femur_joint
+      - fr_tibia_joint
+      - mr_coxa_joint
+      - mr_femur_joint
+      - mr_tibia_joint
+      - rr_coxa_joint
+      - rr_femur_joint
+      - rr_tibia_joint
+
+joint_group_effort_controller:
+  ros__parameters:
+    joints:
+      - fl_coxa_joint
+      - fl_femur_joint
+      - fl_tibia_joint
+      - ml_coxa_joint
+      - ml_femur_joint
+      - ml_tibia_joint
+      - rl_coxa_joint
+      - rl_femur_joint
+      - rl_tibia_joint
+      - fr_coxa_joint
+      - fr_femur_joint
+      - fr_tibia_joint
+      - mr_coxa_joint
+      - mr_femur_joint
+      - mr_tibia_joint
+      - rr_coxa_joint
+      - rr_femur_joint
+      - rr_tibia_joint

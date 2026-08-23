@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ros2_control hardware interface + the Gazebo system plugin that hosts the
+  controller_manager inside the sim process.
+
+  Each of the 18 joints exposes BOTH a position and an effort command interface.
+  Only one controller can claim a joint at a time, so in practice
+  joint_group_position_controller claims position and the effort controller sits
+  unloaded as a spare - but having both declared means you can switch to torque
+  control later without touching the description.
+
+  How position control actually reaches the physics engine: gz_ros2_control's
+  GazeboSimSystem converts a position command into a velocity command via a P
+  loop whose gain is `position_proportional_gain` in ros2_controllers.yaml. It
+  is NOT a kinematic teleport, so the legs genuinely push against the ground and
+  the robot walks rather than sliding. That gain matters - too low and the legs
+  lag behind the gait and the robot collapses.
+
+  Moving to real servos later: swap the <plugin> below for your hardware
+  interface (it would speak the JSON serial protocol in hexapod_esp.cpp).
+  Nothing upstream changes - the gait controller only ever publishes to
+  /joint_group_position_controller/commands.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="hexapod_joint_iface" params="name">
+    <joint name="${name}">
+      <command_interface name="position"/>
+      <command_interface name="effort"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+      <state_interface name="effort"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_leg_ifaces" params="prefix">
+    <xacro:hexapod_joint_iface name="${prefix}_coxa_joint"/>
+    <xacro:hexapod_joint_iface name="${prefix}_femur_joint"/>
+    <xacro:hexapod_joint_iface name="${prefix}_tibia_joint"/>
+  </xacro:macro>
+
+  <xacro:macro name="hexapod_ros2_control" params="controllers_file">
+
+    <ros2_control name="HexapodSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+
+      <xacro:hexapod_leg_ifaces prefix="fl"/>
+      <xacro:hexapod_leg_ifaces prefix="ml"/>
+      <xacro:hexapod_leg_ifaces prefix="rl"/>
+      <xacro:hexapod_leg_ifaces prefix="fr"/>
+      <xacro:hexapod_leg_ifaces prefix="mr"/>
+      <xacro:hexapod_leg_ifaces prefix="rr"/>
+    </ros2_control>
+
+    <gazebo>
+      <plugin filename="gz_ros2_control-system"
+              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>${controllers_file}</parameters>
+      </plugin>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

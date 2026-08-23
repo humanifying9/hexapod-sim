@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.aider*
+.vscode/
+*.db
+*.db-shm
+*.db-wal
+*.db-lock

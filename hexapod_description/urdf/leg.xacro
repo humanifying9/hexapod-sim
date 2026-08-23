@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<!--
+  One 3-DOF leg: coxa -> femur -> tibia -> foot.
+
+  Everything is built along the leg's local +X axis. `mount_yaw` rotates that
+  local frame into place on the body, and it is the ONLY thing that differs
+  between the six legs. Because all the kinematics live in the local frame, the
+  left and right legs use identical maths - there is no mirroring anywhere, and
+  hexapod_control runs one IK routine for all six.
+
+  ===========================================================================
+  THE 55 DEGREE COXA TILT
+
+  The femur joint origin carries rpy="0 55deg 0". That is a fixed mechanical
+  offset in the bracket, not a commandable joint: with every servo at zero the
+  leg already slopes 55 degrees toward the ground.
+
+      SIDE VIEW, all joints at zero
+
+        [ BODY ]
+           |
+           +==========o  <- femur joint origin, frame pitched 55 deg down
+           | coxa      \
+                        \  55 deg
+                         \
+                          \  femur
+                           o
+                            \
+                             \  tibia
+                              o  foot
+
+  So the femur's true angle below horizontal is (55 deg + femur_command), and
+  the tibia's is (55 deg + femur_command + tibia_command). hexapod_control's
+  leg_kinematics.py adds and removes that offset - if you change the tilt here,
+  change coxa_tilt_deg in gait.yaml to match.
+  ===========================================================================
+
+  Sign conventions the IK depends on (all rotations about +Y):
+    coxa  (+Z): positive swings the leg counter-clockwise seen from above
+    femur (+Y): positive lowers the foot
+    tibia (+Y): positive raises the foot toward the body
+
+  Rotating a point at (L,0,0) about +Y by q gives (L*cos q, 0, -L*sin q), which
+  is where "positive lowers the tip" comes from. The tibia servo range is almost
+  entirely negative (-150..+30 deg) because the tibia folds back underneath.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="leg" params="prefix x y mount_yaw">
+
+    <!-- ========== coxa ========== -->
+    <joint name="${prefix}_coxa_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="${prefix}_coxa_link"/>
+      <origin xyz="${x} ${y} 0" rpy="0 0 ${mount_yaw}"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${coxa_limit_lower}" upper="${coxa_limit_upper}"
+             effort="${joint_effort}" velocity="${joint_velocity}"/>
+      <dynamics damping="0.1" friction="0.1"/>
+    </joint>
+
+    <link name="${prefix}_coxa_link">
+      <visual>
+        <origin xyz="${coxa_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <xacro:if value="$(arg use_meshes)">
+            <mesh filename="package://hexapod_description/meshes/coxa.stl" scale="0.001 0.001 0.001"/>
+          </xacro:if>
+          <xacro:unless value="$(arg use_meshes)">
+            <box size="${coxa_length} ${coxa_width} ${coxa_width}"/>
+          </xacro:unless>
+        </geometry>
+        <material name="dark_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="${coxa_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${coxa_length} ${coxa_width} ${coxa_width}"/>
+        </geometry>
+      </collision>
+      <xacro:bar_inertia m="${coxa_mass}" len="${coxa_length}"
+                         w="${coxa_width}" h="${coxa_width}"/>
+    </link>
+
+    <!-- ========== femur ==========
+         The 55 deg pitch on this origin is the mechanical tilt described above. -->
+    <joint name="${prefix}_femur_joint" type="revolute">
+      <parent link="${prefix}_coxa_link"/>
+      <child link="${prefix}_femur_link"/>
+      <origin xyz="${coxa_length} 0 0" rpy="0 ${radians(coxa_tilt_deg)} 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${femur_limit_lower}" upper="${femur_limit_upper}"
+             effort="${joint_effort}" velocity="${joint_velocity}"/>
+      <dynamics damping="0.1" friction="0.1"/>
+    </joint>
+
+    <link name="${prefix}_femur_link">
+      <visual>
+        <origin xyz="${femur_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <xacro:if value="$(arg use_meshes)">
+            <mesh filename="package://hexapod_description/meshes/femur.stl" scale="0.001 0.001 0.001"/>
+          </xacro:if>
+          <xacro:unless value="$(arg use_meshes)">
+            <box size="${femur_length} ${femur_width} ${femur_height}"/>
+          </xacro:unless>
+        </geometry>
+        <material name="leg_orange"/>
+      </visual>
+      <collision>
+        <origin xyz="${femur_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${femur_length} ${femur_width} ${femur_height}"/>
+        </geometry>
+      </collision>
+      <xacro:bar_inertia m="${femur_mass}" len="${femur_length}"
+                         w="${femur_width}" h="${femur_height}"/>
+    </link>
+
+    <!-- ========== tibia ==========
+         Modelled as a STRAIGHT bar of tibia_length along +X, with the foot at
+         its tip. Your CAD tibia is curved, but the IK treats it as a straight
+         0.130 m link, so the collision model has to agree or the robot will not
+         stand where the solver thinks it does. When you drop the real mesh in,
+         the mesh can be as curved as you like - only keep the tip 0.130 m from
+         the tibia joint along +X. -->
+    <joint name="${prefix}_tibia_joint" type="revolute">
+      <parent link="${prefix}_femur_link"/>
+      <child link="${prefix}_tibia_link"/>
+      <origin xyz="${femur_length} 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${tibia_limit_lower}" upper="${tibia_limit_upper}"
+             effort="${joint_effort}" velocity="${joint_velocity}"/>
+      <dynamics damping="0.1" friction="0.1"/>
+    </joint>
+
+    <link name="${prefix}_tibia_link">
+      <visual>
+        <origin xyz="${tibia_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <xacro:if value="$(arg use_meshes)">
+            <mesh filename="package://hexapod_description/meshes/tibia.stl" scale="0.001 0.001 0.001"/>
+          </xacro:if>
+          <xacro:unless value="$(arg use_meshes)">
+            <box size="${tibia_length} ${tibia_width} ${tibia_width}"/>
+          </xacro:unless>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <origin xyz="${tibia_length/2} 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${tibia_length} ${tibia_width} ${tibia_width}"/>
+        </geometry>
+      </collision>
+      <xacro:bar_inertia m="${tibia_mass}" len="${tibia_length}"
+                         w="${tibia_width}" h="${tibia_width}"/>
+    </link>
+
+    <!-- ========== foot ==========
+         The contact patch gets its own link so it can be given grippy friction
+         without making the whole leg sticky, and so the gait solver has a real
+         TF frame to aim at when debugging foot placement in RViz. -->
+    <joint name="${prefix}_foot_joint" type="fixed">
+      <parent link="${prefix}_tibia_link"/>
+      <child link="${prefix}_foot_link"/>
+      <origin xyz="${tibia_length} 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${prefix}_foot_link">
+      <visual>
+        <geometry><sphere radius="${foot_radius}"/></geometry>
+        <material name="rubber"/>
+      </visual>
+      <collision>
+        <geometry><sphere radius="${foot_radius}"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="0.01"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+</robot>

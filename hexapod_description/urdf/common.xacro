@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<!--
+  Shared dimensions, masses, limits and inertia helpers.
+
+  ============================ HARDWARE VALUES ============================
+  Everything in this file is taken from the real robot and must stay in sync
+  with three other places:
+
+    1. hexapod_esp/src/hexapod_esp.cpp   - the joint limit table
+    2. hexapod_control/config/gait.yaml  - link lengths the IK solver uses
+    3. your Fusion CAD                   - the source of truth
+
+  If you re-measure something, change it HERE first, then propagate.
+  =========================================================================
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========== body ========== -->
+  <xacro:property name="body_length"    value="0.200"/>
+  <xacro:property name="body_width"     value="0.120"/>
+  <xacro:property name="body_thickness" value="0.040"/>
+  <xacro:property name="body_mass"      value="1.50"/>
+
+  <!-- Ride height: ground to base_link origin. -->
+  <xacro:property name="body_height"    value="0.120"/>
+
+  <!-- Coxa joint positions on the body. -->
+  <xacro:property name="body_mount_x" value="0.080"/>
+  <xacro:property name="body_mount_y" value="0.060"/>
+
+  <!-- Leg splay: how far the front/rear legs point off the forward centreline,
+       viewed from above. Mid legs are always 90 deg (straight out sideways).
+       40 deg matches the mount geometry: atan2(0.060, 0.080) = 36.9 deg, so the
+       legs point very nearly radially outward from the body corners. -->
+  <xacro:property name="leg_splay_deg" value="40"/>
+
+  <!-- ========== leg segments ========== -->
+  <xacro:property name="coxa_length"  value="0.045"/>
+  <xacro:property name="femur_length" value="0.075"/>
+  <xacro:property name="tibia_length" value="0.130"/>
+
+  <!-- THE 55 DEGREE TILT.
+       The femur joint's mounting frame is pitched 55 deg downward relative to
+       the coxa, so with all joints at zero the leg already slopes toward the
+       ground instead of sticking straight out. This is a fixed mechanical
+       offset in the bracket, NOT a commandable joint.
+
+       Consequence for the IK: the femur command angle is measured FROM this
+       tilted frame, so the femur's true angle below horizontal is
+       (55 deg + femur_command). hexapod_control accounts for this - see
+       leg_kinematics.py. -->
+  <xacro:property name="coxa_tilt_deg" value="55"/>
+
+  <xacro:property name="coxa_mass"  value="0.08"/>
+  <xacro:property name="femur_mass" value="0.12"/>
+  <xacro:property name="tibia_mass" value="0.10"/>
+
+  <xacro:property name="coxa_width"      value="0.030"/>
+  <xacro:property name="femur_width"     value="0.028"/>
+  <xacro:property name="femur_height"    value="0.025"/>
+  <xacro:property name="tibia_width"     value="0.016"/>
+  <xacro:property name="foot_radius"     value="0.010"/>
+
+  <!-- ========== joint limits ==========
+       Straight from the MG996R servo table in hexapod_esp.cpp. Note the tibia
+       range is almost entirely NEGATIVE - the tibia folds back under the femur,
+       which is why the IK picks the negative branch of the cosine rule. -->
+  <xacro:property name="joint_effort"   value="45.0"/>
+  <xacro:property name="joint_velocity" value="6.0"/>
+
+  <xacro:property name="coxa_limit_lower"  value="-1.5708"/>  <!-- -90 deg -->
+  <xacro:property name="coxa_limit_upper"  value=" 1.5708"/>  <!-- +90 deg -->
+  <xacro:property name="femur_limit_lower" value="-0.5236"/>  <!-- -30 deg -->
+  <xacro:property name="femur_limit_upper" value=" 2.0944"/>  <!-- +120 deg -->
+  <xacro:property name="tibia_limit_lower" value="-2.6180"/>  <!-- -150 deg -->
+  <xacro:property name="tibia_limit_upper" value=" 0.5236"/>  <!-- +30 deg -->
+
+  <!-- ========== materials ========== -->
+  <material name="chassis_blue"><color rgba="0.10 0.30 0.80 1.0"/></material>
+  <material name="dark_grey"><color rgba="0.20 0.20 0.20 1.0"/></material>
+  <material name="leg_orange"><color rgba="1.00 0.50 0.00 1.0"/></material>
+  <material name="black"><color rgba="0.10 0.10 0.10 1.0"/></material>
+  <material name="camera_red"><color rgba="0.80 0.10 0.10 1.0"/></material>
+  <material name="rubber"><color rgba="0.05 0.05 0.05 1.0"/></material>
+
+  <!-- ========== inertia helpers ==========
+       The old hand-written inertia values were rough round numbers; these are
+       computed from the actual box dimensions. Masses are unchanged. -->
+
+  <!-- Solid box about its own centre. -->
+  <xacro:macro name="box_inertia" params="m x y z">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y + z*z)/12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m*(x*x + z*z)/12.0}" iyz="0.0"
+               izz="${m*(x*x + y*y)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Bar of length `len` lying along +X, centred at len/2 - the shape every
+       leg segment uses. -->
+  <xacro:macro name="bar_inertia" params="m len w h">
+    <inertial>
+      <origin xyz="${len/2.0} 0 0" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(w*w + h*h)/12.0}" ixy="0.0" ixz="0.0"
+               iyy="${m*(len*len + h*h)/12.0}" iyz="0.0"
+               izz="${m*(len*len + w*w)/12.0}"/>
+    </inertial>
+  </xacro:macro>
+
+</robot>

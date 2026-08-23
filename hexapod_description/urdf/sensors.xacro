@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<!--
+  Camera, IMU, and the little face display, plus contact surface properties.
+
+  NOTE ON THE GAZEBO MIGRATION: the previous description used the Gazebo Classic
+  plugins libgazebo_ros_camera.so and libgazebo_ros_imu_sensor.so. Those do not
+  exist in Gazebo Harmonic (gz-sim 8) and would have silently produced no
+  topics. Harmonic publishes sensor data on gz-transport instead, and
+  hexapod_gazebo/config/gz_bridge.yaml maps it onto ROS. If you rename a <topic>
+  here, rename it there too.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="sensor_suite">
+
+    <!-- ==================== Pi Camera v1, front-centre ==================== -->
+
+    <joint name="camera_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="camera_link"/>
+      <origin xyz="0.105 0 0.01" rpy="0 0 0"/>
+    </joint>
+
+    <link name="camera_link">
+      <visual>
+        <geometry><box size="0.005 0.025 0.024"/></geometry>
+        <material name="camera_red"/>
+      </visual>
+      <collision>
+        <geometry><box size="0.005 0.025 0.024"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="0.01"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+
+    <!-- REP-103 optical frame: z forward, x right, y down. Vision code expects
+         this; camera_link itself uses the robot convention (x forward). -->
+    <joint name="camera_optical_joint" type="fixed">
+      <parent link="camera_link"/>
+      <child link="camera_link_optical"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+    <link name="camera_link_optical"/>
+
+    <gazebo reference="camera_link">
+      <sensor name="pi_camera" type="camera">
+        <topic>camera/image_raw</topic>
+        <gz_frame_id>camera_link_optical</gz_frame_id>
+        <update_rate>30</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <camera>
+          <!-- 0.935 rad = 53.6 deg, the Pi Camera v1 horizontal FOV. -->
+          <horizontal_fov>0.935</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.005</stddev>
+          </noise>
+        </camera>
+      </sensor>
+    </gazebo>
+
+    <!-- ==================== IMU, body centre ==================== -->
+
+    <joint name="imu_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="imu_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="imu_link">
+      <inertial>
+        <mass value="0.005"/>
+        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+      </inertial>
+    </link>
+
+    <gazebo reference="imu_link">
+      <sensor name="imu_sensor" type="imu">
+        <topic>imu</topic>
+        <gz_frame_id>imu_link</gz_frame_id>
+        <update_rate>100</update_rate>
+        <always_on>true</always_on>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0.0</mean><stddev>2e-4</stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0.0</mean><stddev>1.7e-2</stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </gazebo>
+
+    <!-- ==================== 1 inch face display ====================
+         A frame for the little expression screen. It carries no sensor - the
+         face is rendered by hexapod_face and published as an image - but having
+         it in the model means RViz shows you where it points, and if you ever
+         want to render the face into the sim you have somewhere to attach it. -->
+
+    <joint name="face_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="face_link"/>
+      <origin xyz="0.098 0 0.032" rpy="0 ${radians(-20)} 0"/>
+    </joint>
+
+    <link name="face_link">
+      <visual>
+        <!-- 1 inch square, tilted up 20 deg so it faces a standing human. -->
+        <geometry><box size="0.002 0.0254 0.0254"/></geometry>
+        <material name="black"/>
+      </visual>
+      <inertial>
+        <mass value="0.005"/>
+        <inertia ixx="1e-7" ixy="0" ixz="0" iyy="1e-7" iyz="0" izz="1e-7"/>
+      </inertial>
+    </link>
+
+  </xacro:macro>
+
+  <!-- ==================== contact surfaces ====================
+       Feet need real grip or the robot moonwalks in place. The belly is left
+       slippery so that if it does touch down it does not act as a brake. -->
+  <xacro:macro name="gazebo_surfaces">
+
+    <xacro:macro name="foot_surface" params="prefix">
+      <gazebo reference="${prefix}_foot_link">
+        <mu1>1.6</mu1>
+        <mu2>1.6</mu2>
+        <kp>1000000.0</kp>
+        <kd>100.0</kd>
+        <minDepth>0.001</minDepth>
+      </gazebo>
+    </xacro:macro>
+
+    <xacro:foot_surface prefix="fl"/>
+    <xacro:foot_surface prefix="ml"/>
+    <xacro:foot_surface prefix="rl"/>
+    <xacro:foot_surface prefix="fr"/>
+    <xacro:foot_surface prefix="mr"/>
+    <xacro:foot_surface prefix="rr"/>
+
+    <gazebo reference="base_link">
+      <mu1>0.3</mu1>
+      <mu2>0.3</mu2>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>
