@@ -17,8 +17,8 @@ tripod_gait_controller:
     stance_drop: 0.110
 
     gait_period: 1.0       # seconds per full swing+stance cycle
-    step_height: 0.030     # foot lift height during swing, metres
-    max_step_length: 0.050 # clamp on stride length per axis, metres
+    step_height: 0.050     # foot lift height during swing, metres
+    max_step_length: 0.075 # clamp on stride length per axis, metres
 
     control_rate: 50.0     # Hz
     cmd_vel_timeout: 0.5   # seconds - no /cmd_vel this recent -> stand still
