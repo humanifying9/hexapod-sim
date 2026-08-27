@@ -9,6 +9,10 @@ and the planned custom PCB controller (and eventually an onboard agent)
 only need to publish the same message to the same topic later - nothing
 downstream has to change.
 
+Run with `ros2 run hexapod_teleop keyboard_teleop`, not `ros2 launch` - launch
+does not forward the parent terminal's stdin to the process it starts, so a
+launched copy always hits the "not a tty" guard below and exits immediately.
+
 Keys (terminal running this node needs focus):
   w/s        forward / backward
   a/d        strafe left / right
