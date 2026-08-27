@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<robot name="hexapod_single_leg" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ================================================================== -->
+  <!--  SINGLE LEG URDF • 3 DOF per leg: COXA, FEMUR, TIBIA                -->
+  <!--  Angles are in radians.                                            -->
+  <!--  This model represents ONE leg of a hexapod so it can be tested   -->
+  <!--  in isolation before scaling to 6 legs.                           -->
+  <!-- ================================================================== -->
+
+  <!-- 40° bracket angle for the femur mount (from your photo) -->
+  <xacro:property name="femur_angle" value="${40.0 * pi / 180.0}" />
+
+  <!-- ---- Visual Materials ---- -->
+  <material name="purple"><color rgba="0.6 0.4 0.7 1.0"/></material>
+  <material name="dark_purple"><color rgba="0.3 0.1 0.4 1.0"/></material>
+
+  <!-- ================================================================== -->
+  <!--  GAZEBO EXTENSIONS                                                  -->
+  <!--  Each joint gets a <gazebo> reference with a PID controller so     -->
+  <!--  that ros2_controllers can command torque/position in simulation.  -->
+  <!-- ================================================================== -->
+
+  <!-- Coxa joint — yaw rotation about world-Z -->
+  <gazebo reference="coxa_joint">
+    <implicit_spring_damper>1</implicit_spring_damper>
+    <finetune>
+      <joint>
+        <damping>0.01</damping>
+        <limit>
+          <erp>0.5</erp>
+          <max_vel>2.0</max_vel>
+        </limit>
+      </joint>
+    </finetune>
+  </gazebo>
+
+  <!-- Femur joint — pitch rotation tilted by femur_angle -->
+  <gazebo reference="femur_joint">
+    <implicit_spring_damper>1</implicit_spring_damper>
+    <finetune>
+      <joint>
+        <damping>0.01</damping>
+        <limit>
+          <erp>0.5</erp>
+          <max_vel>2.0</max_vel>
+        </limit>
+      </joint>
+    </finetune>
+  </gazebo>
+
+  <!-- Tibia joint — pitch rotation -->
+  <gazebo reference="tibia_joint">
+    <implicit_spring_damper>1</implicit_spring_damper>
+    <finetune>
+      <joint>
+        <damping>0.01</damping>
+        <limit>
+          <erp>0.5</erp>
+          <max_vel>2.0</max_vel>
+        </limit>
+      </joint>
+    </finetune>
+  </gazebo>
+
+  <!-- ================================================================== -->
+  <!--  TRANSMISSIONS                                                      -->
+  <!--  Tell ros2_controllers these joints are actuated. Each transmission  -->
+  <!--  maps a joint to a hardware interface (position, velocity, effort). -->
+  <!-- ================================================================== -->
+
+  <transmission name="coxa_trans">
+    <type>joint_state_broadcaster/CoxaJoint</type>
+    <joint name="coxa_joint">
+      <hardware>
+        <interface name="position"/>
+        <interface name="velocity"/>
+        <interface name="effort"/>
+      </hardware>
+    </joint>
+  </transmission>
+
+  <transmission name="femur_trans">
+    <type>joint_state_broadcaster/FemurJoint</type>
+    <joint name="femur_joint">
+      <hardware>
+        <interface name="position"/>
+        <interface name="velocity"/>
+        <interface name="effort"/>
+      </hardware>
+    </joint>
+  </transmission>
+
+  <transmission name="tibia_trans">
+    <type>joint_state_broadcaster/TibiaJoint</type>
+    <joint name="tibia_joint">
+      <hardware>
+        <interface name="position"/>
+        <interface name="velocity"/>
+        <interface name="effort"/>
+      </hardware>
+    </joint>
+  </transmission>
+
+  <!-- ================================================================== -->
+  <!--  ROBOT LINKS & JOINTS                                                -->
+  <!-- ================================================================== -->
+
+  <!-- Dummy ground link so the leg isn't floating -->
+  <link name="world"/>
+
+  <!-- Virtual fixed joint anchors the chassis 0.4m above the ground -->
+  <joint name="virtual_joint" type="fixed">
+    <parent link="world"/>
+    <child link="chassis"/>
+    <origin xyz="0 0 0.4" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ---- Chassis (base platform) ---- -->
+  <link name="chassis">
+    <visual>
+      <geometry><box size="0.15 0.15 0.05"/></geometry>
+      <material name="dark_purple"/>
+    </visual>
+    <collision><geometry><box size="0.15 0.15 0.05"/></geometry></collision>
+    <inertial>
+      <mass value="1.0"/>
+      <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.002" iyz="0" izz="0.003"/>
+    </inertial>
+  </link>
+
+  <!-- ---- Joint 1: COXA (yaw about Z, left/right swing) ---- -->
+  <joint name="coxa_joint" type="revolute">
+    <parent link="chassis"/>
+    <child link="coxa_link"/>
+    <origin xyz="0.075 0.075 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.57" upper="1.57" effort="5.0" velocity="2.0"/>
+  </joint>
+
+  <link name="coxa_link">
+    <visual>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.05 0.04 0.04"/></geometry>
+      <material name="purple"/>
+    </visual>
+    <collision>
+      <origin xyz="0.025 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.05 0.04 0.04"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <!-- ---- Joint 2: FEMUR (pitch, tilted 40° to match your bracket) ---- -->
+  <joint name="femur_joint" type="revolute">
+    <parent link="coxa_link"/>
+    <child link="femur_link"/>
+    <origin xyz="0.05 0 0" rpy="0 ${femur_angle} 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="5.0" velocity="2.0"/>
+  </joint>
+
+  <link name="femur_link">
+    <visual>
+      <origin xyz="0.06 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.035 0.035"/></geometry>
+      <material name="purple"/>
+    </visual>
+    <collision>
+      <origin xyz="0.06 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.12 0.035 0.035"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.08"/>
+      <inertia ixx="0.00002" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005"/>
+    </inertial>
+  </link>
+
+  <!-- ---- Joint 3: TIBIA (pitch, lower leg) ---- -->
+  <joint name="tibia_joint" type="revolute">
+    <parent link="femur_link"/>
+    <child link="tibia_link"/>
+    <origin xyz="0.12 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="5.0" velocity="2.0"/>
+  </joint>
+
+  <link name="tibia_link">
+    <visual>
+      <origin xyz="0.03 0 0.05" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.02 0.12"/></geometry>
+      <material name="dark_purple"/>
+    </visual>
+    <collision>
+      <origin xyz="0.03 0 0.05" rpy="0 0 0"/>
+      <geometry><box size="0.02 0.02 0.12"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.04"/>
+      <inertia ixx="0.00004" ixy="0" ixz="0" iyy="0.00004" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+</robot>

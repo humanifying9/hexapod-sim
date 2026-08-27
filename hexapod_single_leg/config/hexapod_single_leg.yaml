@@ -1,0 +1,58 @@
+# Controller Manager configuration for the hexapod single leg.
+#
+# This file is loaded by the launch file and passed to the
+# controller_manager node, which uses it to know:
+#   1. Which ROS 2 Control hardware plugins to load
+#   2. Which controllers to start, and their parameters
+#
+# ┌── Concepts ──────────────────────────────────────────────┐
+# │  joint_state_broadcaster: reads joint positions from     │
+# │  the simulation and publishes /joint_states (used by    │
+# │  RViz/Gazebo to visualize the robot).                    │
+# │                                                          │
+# │  joint_trajectory_controller: subscribes to             │
+# │  /hexapod_controller/joint_trajectory (a                 │
+# │  FollowJointTrajectory action goal) and sends position  │
+# │  commands to each joint's hardware interface.            │
+# └──────────────────────────────────────────────────────────┘
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Hz — how often the controller runs
+    use_sim_time: true
+    joints: ["coxa_joint", "femur_joint", "tibia_joint"]
+
+# Joint State Broadcaster — publishes /joint_states for visualization
+joint_state_broadcaster:
+  ros__parameters:
+    type: joint_state_broadcaster/JointStateBroadcaster
+    publish_rate: 50
+    use_sim_time: true
+
+# Joint Trajectory Controller — receives trajectory commands
+hexapod_controller:
+  ros__parameters:
+    type: joint_trajectory_controller/JointTrajectoryController
+    joints: ["coxa_joint", "femur_joint", "tibia_joint"]
+    coxa_joint:
+      min_position: -1.57
+      max_position: 1.57
+      pid: {p: 100.0, i: 0.0, d: 10.0}
+      command_interfaces: ["position"]
+      state_interfaces: ["position", "velocity"]
+    femur_joint:
+      min_position: -1.57
+      max_position: 1.57
+      pid: {p: 100.0, i: 0.0, d: 10.0}
+      command_interfaces: ["position"]
+      state_interfaces: ["position", "velocity"]
+    tibia_joint:
+      min_position: -1.57
+      max_position: 1.57
+      pid: {p: 100.0, i: 0.0, d: 10.0}
+      command_interfaces: ["position"]
+      state_interfaces: ["position", "velocity"]
+    state_publish_rate: 50
+    hold_trajectory_duration: 0.0
+    allow_partial_joints: false
+    use_sim_time: true

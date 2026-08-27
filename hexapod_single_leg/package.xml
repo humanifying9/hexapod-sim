@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hexapod_single_leg</name>
+  <version>0.1.0</version>
+  <description>ROS 2 package for simulating and controlling a single hexapod leg in Gazebo.
+    This package contains a URDF model for one leg (coxa + femur + tibia), a launch file
+    to spawn it into Gazebo, and a Python node that publishes JointState messages so the
+    leg can be visualized and controlled.</description>
+  <maintainer email="tiaparekh9@gmail.com">tia_parekh</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- Runtime / build dependencies needed by the launch file and nodes -->
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>ros_gz_sim</depend>
+  <depend>ros_gz_bridge</depend>
+  <depend>controller_manager</depend>
+  <depend>controller_manager_msgs</depend>
+  <depend>joint_state_broadcaster</depend>
+  <depend>joint_trajectory_controller</depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <!-- Make this a Python-based package -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
