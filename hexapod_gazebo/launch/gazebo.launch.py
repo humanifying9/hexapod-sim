@@ -25,7 +25,18 @@ def generate_launch_description():
         output='screen'
     )
 
+    bridge_config = os.path.join(pkg_hexapod_gazebo, 'config', 'gz_bridge.yaml')
+
+    ros_gz_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        name='ros_gz_bridge',
+        parameters=[{'config_file': bridge_config}],
+        output='screen'
+    )
+
     return LaunchDescription([
         gz_sim,
-        spawn_entity
+        spawn_entity,
+        ros_gz_bridge
     ])

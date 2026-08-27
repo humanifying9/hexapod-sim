@@ -1,0 +1,25 @@
+# Maps gz-transport sensor topics (published by the sensors declared in
+# hexapod_description/urdf/sensors.xacro) onto ROS 2 topics. Topic names here
+# are the literal <topic> values from sensors.xacro - Harmonic (gz-sim 8)
+# uses those directly rather than deriving a scoped name, confirmed by
+# `gz topic -l` while the sim is running.
+#
+# If you rename a <topic> in sensors.xacro, rename it here too.
+
+- ros_topic_name: "camera/image_raw"
+  gz_topic_name: "camera/image_raw"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/camera_info"
+  gz_topic_name: "camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "imu"
+  gz_topic_name: "imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS

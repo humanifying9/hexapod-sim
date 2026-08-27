@@ -12,9 +12,15 @@ def generate_launch_description():
     pkg_hexapod_gazebo = get_package_share_directory('hexapod_gazebo')
     pkg_hexapod_control = get_package_share_directory('hexapod_control')
 
-    # Xacro processing
+    # Xacro processing. controllers_file has to be passed explicitly here -
+    # it has no useful default, and gz_ros2_control fails hard ("found an
+    # empty parameters file") if it's left unset, which silently means the
+    # controller_manager never starts and every controller spawner below
+    # hangs forever waiting for a service that never comes up.
+    controllers_yaml = os.path.join(pkg_hexapod_gazebo, 'config', 'ros2_controllers.yaml')
     xacro_file = os.path.join(pkg_hexapod_description, 'urdf', 'hexapod.urdf.xacro')
-    robot_description_config = xacro.process_file(xacro_file)
+    robot_description_config = xacro.process_file(
+        xacro_file, mappings={'controllers_file': controllers_yaml})
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     robot_state_publisher = Node(
