@@ -10,6 +10,7 @@ import xacro
 def generate_launch_description():
     pkg_hexapod_description = get_package_share_directory('hexapod_description')
     pkg_hexapod_gazebo = get_package_share_directory('hexapod_gazebo')
+    pkg_hexapod_control = get_package_share_directory('hexapod_control')
 
     # Xacro processing
     xacro_file = os.path.join(pkg_hexapod_description, 'urdf', 'hexapod.urdf.xacro')
@@ -43,10 +44,13 @@ def generate_launch_description():
         output='screen'
     )
 
+    gait_params = os.path.join(pkg_hexapod_control, 'config', 'gait.yaml')
+
     tripod_gait_node = Node(
         package='hexapod_control',
         executable='tripod_gait_controller',
         name='tripod_gait_controller',
+        parameters=[gait_params],
         output='screen'
     )
 

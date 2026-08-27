@@ -1,0 +1,24 @@
+# Parameters for hexapod_control/tripod_gait_controller.
+#
+# link lengths / coxa_tilt_deg MUST match hexapod_description/urdf/common.xacro
+# - see the note at the top of that file. If you re-measure the robot, change
+# it there first, then here.
+tripod_gait_controller:
+  ros__parameters:
+    coxa_length: 0.045
+    femur_length: 0.075
+    tibia_length: 0.130
+    coxa_tilt_deg: 55.0
+
+    # Neutral standing foot position, in the leg-local frame (same for all six
+    # legs - see leg_kinematics.py). stance_reach is horizontal distance
+    # beyond the coxa joint; stance_drop is how far below it the foot rests.
+    stance_reach: 0.080
+    stance_drop: 0.110
+
+    gait_period: 1.0       # seconds per full swing+stance cycle
+    step_height: 0.030     # foot lift height during swing, metres
+    max_step_length: 0.050 # clamp on stride length per axis, metres
+
+    control_rate: 50.0     # Hz
+    cmd_vel_timeout: 0.5   # seconds - no /cmd_vel this recent -> stand still
