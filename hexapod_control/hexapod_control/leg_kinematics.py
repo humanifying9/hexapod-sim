@@ -60,9 +60,9 @@ class LegGeometry:
     robot, change them there and in hexapod_control/config/gait.yaml.
     """
 
-    coxa_length: float = 0.0695
-    femur_length: float = 0.0859
-    tibia_length: float = 0.1194
+    coxa_length: float = 0.0675
+    femur_length: float = 0.0875
+    tibia_length: float = 0.1075
     coxa_tilt: float = math.radians(50.0)
 
     @property

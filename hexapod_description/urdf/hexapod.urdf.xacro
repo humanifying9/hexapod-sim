@@ -16,9 +16,15 @@
   <!-- Path to ros2_controllers.yaml, injected by the launch file so the
        gz_ros2_control plugin can find it at spawn time. -->
   <xacro:arg name="controllers_file" default=""/>
-  <!-- Real meshes landed 2026-08-29 (exported from HexapodV2.step) - on by
-       default now. Set false for the primitive-box fallback. -->
-  <xacro:arg name="use_meshes" default="true"/>
+  <!-- Real mesh files exist in meshes/ (exported from HexapodV2.step,
+       2026-08-29) but getting their per-link origins to actually line up
+       with the simplified kinematic joint frames turned into a real rabbit
+       hole (real CAD parts don't sit at the idealized zero-pitch/zero-bend
+       positions the joints assume) and got shelved. Off by default until
+       that's revisited - the primitive-box fallback below already uses the
+       correct measured dimensions/angles from common.xacro, so physics/IK
+       are unaffected either way; this only changes what it looks like. -->
+  <xacro:arg name="use_meshes" default="false"/>
   <!-- Set false for a plain URDF with no Gazebo / ros2_control tags. -->
   <xacro:arg name="simulation" default="true"/>
 
