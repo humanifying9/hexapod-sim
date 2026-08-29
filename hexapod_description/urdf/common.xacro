@@ -16,40 +16,54 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- ========== body ========== -->
-  <xacro:property name="body_length"    value="0.200"/>
-  <xacro:property name="body_width"     value="0.120"/>
+  <!-- Measured 2026-08-29 from HexapodV2.step (bounding box of HexapodMainBody). -->
+  <xacro:property name="body_length"    value="0.300"/>
+  <xacro:property name="body_width"     value="0.223"/>
   <xacro:property name="body_thickness" value="0.040"/>
   <xacro:property name="body_mass"      value="1.50"/>
 
-  <!-- Ride height: ground to base_link origin. -->
-  <xacro:property name="body_height"    value="0.120"/>
+  <!-- Ride height: ground to base_link origin. Not a direct CAD measurement -
+       tune alongside gait.yaml's stance_drop once the gait is walking. -->
+  <xacro:property name="body_height"    value="0.135"/>
 
-  <!-- Coxa joint positions on the body. -->
-  <xacro:property name="body_mount_x" value="0.080"/>
-  <xacro:property name="body_mount_y" value="0.060"/>
+  <!-- Coxa joint positions on the body. Measured from the body-coxa joint's
+       servo-shaft bore in the CAD assembly (see common.xacro's HARDWARE
+       VALUES note - re-measure there first if this changes). -->
+  <xacro:property name="body_mount_x" value="0.1383"/>
+  <xacro:property name="body_mount_y" value="0.0663"/>
 
   <!-- Leg splay: how far the front/rear legs point off the forward centreline,
        viewed from above. Mid legs are always 90 deg (straight out sideways).
-       40 deg matches the mount geometry: atan2(0.060, 0.080) = 36.9 deg, so the
-       legs point very nearly radially outward from the body corners. -->
+       Confirmed directly from the body's own mounting-pattern sketch in CAD
+       (measured 140 deg between the forward axis and a rear mount line, i.e.
+       180 - 40). -->
   <xacro:property name="leg_splay_deg" value="40"/>
 
-  <!-- ========== leg segments ========== -->
-  <xacro:property name="coxa_length"  value="0.045"/>
-  <xacro:property name="femur_length" value="0.075"/>
-  <xacro:property name="tibia_length" value="0.130"/>
+  <!-- ========== leg segments ==========
+       Measured 2026-08-29 from HexapodV2.step: distance between the servo-
+       shaft bore centres at each joint (body-coxa, coxa-femur, femur-tibia),
+       tibia_length to the farthest point on the tibia body from its joint. -->
+  <xacro:property name="coxa_length"  value="0.0764"/>
+  <xacro:property name="femur_length" value="0.0859"/>
+  <xacro:property name="tibia_length" value="0.1194"/>
 
-  <!-- THE 55 DEGREE TILT.
-       The femur joint's mounting frame is pitched 55 deg downward relative to
-       the coxa, so with all joints at zero the leg already slopes toward the
+  <!-- THE COXA TILT.
+       The femur joint's mounting frame is pitched downward relative to the
+       coxa, so with all joints at zero the leg already slopes toward the
        ground instead of sticking straight out. This is a fixed mechanical
-       offset in the bracket, NOT a commandable joint.
+       offset in the bracket, NOT a commandable joint. Measured as the real
+       femur droop below horizontal at the CAD's rest pose - the coxa itself
+       also has a smaller built-in droop (~25 deg) that this model doesn't
+       represent separately; folding it into a single tilt at the femur is a
+       deliberate simplification (matches the existing 3-DOF architecture and
+       leg_kinematics.py's planar-arm reduction) rather than adding a second
+       fixed tilt stage.
 
        Consequence for the IK: the femur command angle is measured FROM this
        tilted frame, so the femur's true angle below horizontal is
-       (55 deg + femur_command). hexapod_control accounts for this - see
-       leg_kinematics.py. -->
-  <xacro:property name="coxa_tilt_deg" value="55"/>
+       (coxa_tilt_deg + femur_command). hexapod_control accounts for this -
+       see leg_kinematics.py. -->
+  <xacro:property name="coxa_tilt_deg" value="50"/>
 
   <xacro:property name="coxa_mass"  value="0.08"/>
   <xacro:property name="femur_mass" value="0.12"/>

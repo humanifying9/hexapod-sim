@@ -16,8 +16,9 @@
   <!-- Path to ros2_controllers.yaml, injected by the launch file so the
        gz_ros2_control plugin can find it at spawn time. -->
   <xacro:arg name="controllers_file" default=""/>
-  <!-- Flip to true once real meshes land in hexapod_description/meshes. -->
-  <xacro:arg name="use_meshes" default="false"/>
+  <!-- Real meshes landed 2026-08-29 (exported from HexapodV2.step) - on by
+       default now. Set false for the primitive-box fallback. -->
+  <xacro:arg name="use_meshes" default="true"/>
   <!-- Set false for a plain URDF with no Gazebo / ros2_control tags. -->
   <xacro:arg name="simulation" default="true"/>
 

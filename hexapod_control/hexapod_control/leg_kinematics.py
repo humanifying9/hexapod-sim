@@ -60,10 +60,10 @@ class LegGeometry:
     robot, change them there and in hexapod_control/config/gait.yaml.
     """
 
-    coxa_length: float = 0.045
-    femur_length: float = 0.075
-    tibia_length: float = 0.130
-    coxa_tilt: float = math.radians(55.0)
+    coxa_length: float = 0.0764
+    femur_length: float = 0.0859
+    tibia_length: float = 0.1194
+    coxa_tilt: float = math.radians(50.0)
 
     @property
     def max_reach(self) -> float:
