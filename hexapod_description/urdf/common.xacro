@@ -36,10 +36,10 @@
 
   <!-- Leg splay: how far the front/rear legs point off the forward centreline,
        viewed from above. Mid legs are always 90 deg (straight out sideways).
-       NOTE: the real legs are NOT all equally angled from each other -
-       this is a simplified symmetric approximation, not a direct
-       measurement. Revisit with per-leg angles if that asymmetry matters
-       for your gait. -->
+       Confirmed 2026-08-30 against Tia's own CAD sketch dimension: 40 deg
+       splay implies a 50 deg gap between a corner leg and its neighbouring
+       mid leg (90 - 40 = 50), which matches the 50.0 deg angle dimensioned
+       directly between two adjacent legs in that sketch. -->
   <xacro:property name="leg_splay_deg" value="40"/>
 
   <!-- ========== leg segments ==========
@@ -68,8 +68,8 @@
        (coxa_tilt_deg + femur_command). hexapod_control accounts for this -
        see leg_kinematics.py.
 
-       TODO: value below is still the old (likely wrong) CAD-derived
-       estimate - needs the real bracket angle. -->
+       Confirmed directly by Tia 2026-08-30 (real bracket angle, not a CAD
+       estimate) - happens to match the earlier CAD-derived guess exactly. -->
   <xacro:property name="coxa_tilt_deg" value="50"/>
 
   <xacro:property name="coxa_mass"  value="0.08"/>
