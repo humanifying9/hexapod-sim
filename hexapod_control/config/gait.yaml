@@ -5,7 +5,7 @@
 # it there first, then here.
 tripod_gait_controller:
   ros__parameters:
-    coxa_length: 0.0764
+    coxa_length: 0.0695
     femur_length: 0.0859
     tibia_length: 0.1194
     coxa_tilt_deg: 50.0

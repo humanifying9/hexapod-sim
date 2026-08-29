@@ -42,8 +42,19 @@
   <!-- ========== leg segments ==========
        Measured 2026-08-29 from HexapodV2.step: distance between the servo-
        shaft bore centres at each joint (body-coxa, coxa-femur, femur-tibia),
-       tibia_length to the farthest point on the tibia body from its joint. -->
-  <xacro:property name="coxa_length"  value="0.0764"/>
+       tibia_length to the farthest point on the tibia body from its joint.
+
+       coxa_length is the HORIZONTAL-only projection of that real distance
+       (69.49mm), not the full 3D distance (76.41mm) - the real coxa has a
+       small built-in droop too (~25 deg), but the coxa_joint below is pure
+       yaw with zero pitch, so a mesh/kinematics built from the real 3D
+       vector would show the coxa always tilted no matter what q1 is
+       commanded, and every downstream link would inherit a compounding
+       misalignment. Using the horizontal-only length keeps the coxa
+       genuinely level, matching the joint's actual degrees of freedom -
+       the real vertical drop from that droop is what coxa_tilt_deg below
+       absorbs (see its own comment). -->
+  <xacro:property name="coxa_length"  value="0.0695"/>
   <xacro:property name="femur_length" value="0.0859"/>
   <xacro:property name="tibia_length" value="0.1194"/>
 
