@@ -24,7 +24,7 @@
 
   <!-- Ride height: ground to base_link origin. Not a direct CAD measurement -
        tune alongside gait.yaml's stance_drop once the gait is walking. -->
-  <xacro:property name="body_height"    value="0.135"/>
+  <xacro:property name="body_height"    value="0.090"/>
 
   <!-- Coxa joint positions on the body. Directly measured by Tia on the real
        design 2026-08-30 (shaft-centre to shaft-centre / body-centre), for

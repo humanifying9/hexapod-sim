@@ -13,12 +13,23 @@ tripod_gait_controller:
     # Neutral standing foot position, in the leg-local frame (same for all six
     # legs - see leg_kinematics.py). stance_reach is horizontal distance
     # beyond the coxa joint; stance_drop is how far below it the foot rests.
-    stance_reach: 0.080
-    stance_drop: 0.110
+    #
+    # These were tuned for the older, longer leg dimensions. With the real
+    # measured lengths (coxa 67.5 / femur 87.5 / tibia 107.5mm), the old
+    # 80/110mm stance forced the femur to bend past 90 deg from horizontal
+    # to reach it - folding backward toward the body instead of continuing
+    # outward. These values keep the femur's true angle below horizontal
+    # (coxa_tilt_deg + femur_command) around 68 deg - well short of 90.
+    stance_reach: 0.140
+    stance_drop: 0.090
 
     gait_period: 1.0       # seconds per full swing+stance cycle
     step_height: 0.050     # foot lift height during swing, metres
-    max_step_length: 0.075 # clamp on stride length per axis, metres
+    # Clamped down from 0.075: with the new, larger stance_reach, a bigger
+    # stride would push the target past the leg's max reach (195mm) and get
+    # silently clamped by leg_kinematics.py anyway - this keeps it inside
+    # with a small safety margin instead.
+    max_step_length: 0.030 # clamp on stride length per axis, metres
 
     control_rate: 50.0     # Hz
     cmd_vel_timeout: 0.5   # seconds - no /cmd_vel this recent -> stand still

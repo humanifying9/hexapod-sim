@@ -11,6 +11,22 @@ controller_manager:
     joint_group_position_controller:
       type: position_controllers/JointGroupPositionController
 
+# gz_ros2_control's GazeboSimSystem (logs as node "gz_ros_control") converts
+# each position command into a velocity command via its own internal P loop:
+# joint_velocity = position_proportional_gain * position_error * update_rate
+# (see hexapod.ros2_control.xacro's comment). This was never actually set,
+# so it ran on the plugin's default of 0.1 - nowhere near strong enough to
+# track against real leg mass under gravity (commanded 17.9deg measured
+# sagging to 50.8deg under load, stable, not just still-converging). It's a
+# single global gain, not per-joint - lives under its own top-level
+# "gz_ros_control" key, NOT nested under controller_manager (confirmed
+# against the gz_ros2_control docs after two wrong guesses at the
+# structure - controller_manager: ros__parameters: <joint>.position_... and
+# a separate top-level block per joint name were both silently ignored).
+gz_ros_control:
+  ros__parameters:
+    position_proportional_gain: 50.0
+
 joint_group_position_controller:
   ros__parameters:
     joints:
